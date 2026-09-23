@@ -37,8 +37,8 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Run MCP stdio wire tests
-        run: node scripts/check-mcp-stdio.mjs
+      - name: Run server contract tests
+        run: npm test
 
       - name: Install Chromium for canvas regression tests
         run: npx playwright install --with-deps chromium
