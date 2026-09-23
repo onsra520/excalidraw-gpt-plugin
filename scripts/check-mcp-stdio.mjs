@@ -45,6 +45,19 @@ function assertEqual(actual, expected, message) {
   assert(actual === expected, `${message} (expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)})`);
 }
 
+function toolByName(tools, name) {
+  const tool = tools.find(candidate => candidate.name === name);
+  assert(tool !== undefined, `tools/list: missing ${name}`);
+  return tool;
+}
+
+function assertToolAnnotations(tool, expected) {
+  assert(tool.annotations !== undefined, `${tool.name}: missing annotations`);
+  for (const [key, value] of Object.entries(expected)) {
+    assertEqual(tool.annotations[key], value, `${tool.name}: annotations.${key}`);
+  }
+}
+
 /**
  * Runs one stdio connection: sends every message, resolves once `expected`
  * responses have come back on stdout.
@@ -168,6 +181,39 @@ async function checkDirectCallWithoutInitialization() {
 
   const listResult = resultOf(responses.find(r => r.id === 1), 'tools/list');
   assert(Array.isArray(listResult.tools) && listResult.tools.length > 0, 'tools/list: expected a non-empty tool list');
+  for (const tool of listResult.tools) {
+    assert(tool.annotations !== undefined, `${tool.name}: expected annotations`);
+  }
+  assertToolAnnotations(toolByName(listResult.tools, 'describe_scene'), {
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false
+  });
+  assertToolAnnotations(toolByName(listResult.tools, 'create_element'), {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: false
+  });
+  assertToolAnnotations(toolByName(listResult.tools, 'clear_canvas'), {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: true,
+    openWorldHint: false
+  });
+  assertToolAnnotations(toolByName(listResult.tools, 'import_scene'), {
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: false,
+    openWorldHint: false
+  });
+  assertToolAnnotations(toolByName(listResult.tools, 'export_to_excalidraw_url'), {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true
+  });
   assert(
     listResult.tools.some(tool => tool.name === CANVAS_FREE_TOOL),
     `tools/list: expected ${CANVAS_FREE_TOOL} to be advertised`
@@ -238,6 +284,12 @@ async function checkLegacyInitialize() {
   const initResult = resultOf(responses.find(r => r.id === 1), 'initialize');
   assertEqual(initResult.protocolVersion, LEGACY_VERSION, 'initialize: negotiated protocol version');
   assertEqual(initResult.serverInfo?.name, 'mcp-excalidraw-server', 'initialize: serverInfo.name');
+  assert(
+    typeof initResult.instructions === 'string' &&
+      initResult.instructions.includes('describe_scene') &&
+      initResult.instructions.includes('clear_canvas'),
+    'initialize: expected Excalidraw operating instructions'
+  );
   assert(initResult.capabilities?.tools !== undefined, 'initialize: tools capability must be advertised');
   assert(initResult.resultType === undefined, 'initialize: 2025-era results must not carry resultType');
 
