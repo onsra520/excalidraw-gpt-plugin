@@ -3,12 +3,20 @@ import type { JsonSchemaType, McpRequestContext, McpServerFactory } from '@model
 import logger from '../utils/logger.js';
 import { packageVersion } from './version.js';
 import { tools } from './mcp-tools.js';
+import { annotationsForTool } from './mcp-tool-annotations.js';
 import { callExcalidrawTool } from './mcp-dispatch.js';
 
 const SERVER_NAME = 'mcp-excalidraw-server';
 const SERVER_DESCRIPTION =
   'Programmatic canvas toolkit for Excalidraw with file I/O, image export, and real-time sync';
 const SERVER_VERSION = packageVersion();
+const SERVER_INSTRUCTIONS = [
+  'Inspect the current canvas with describe_scene before non-trivial edits.',
+  'Prefer batch_create_elements when creating multiple related elements.',
+  'After significant visual changes, verify the result with get_canvas_screenshot when the browser canvas is open.',
+  'Preserve existing canvas content unless the user asks to replace it.',
+  'Only call clear_canvas when the user explicitly asks to wipe the entire canvas.'
+].join(' ');
 
 // `tools/list` and `server/discover` are cacheable results on 2026-07-28
 // (SEP-2549): both are derived from the static tool table in `mcp-tools.ts`, so
@@ -36,6 +44,7 @@ export function createExcalidrawMcpServer(ctx?: McpRequestContext): McpServer {
     },
     {
       capabilities: { tools: {} },
+      instructions: SERVER_INSTRUCTIONS,
       cacheHints: {
         'tools/list': STATIC_SURFACE_CACHE_HINT,
         'server/discover': STATIC_SURFACE_CACHE_HINT
@@ -48,6 +57,7 @@ export function createExcalidrawMcpServer(ctx?: McpRequestContext): McpServer {
       tool.name,
       {
         ...(tool.description !== undefined ? { description: tool.description } : {}),
+        annotations: annotationsForTool(tool.name),
         // `Tool['inputSchema']` is the spec's open JSON value shape; the
         // validator wants a JSON Schema. The tool table above is the authority
         // for both, so reuse it verbatim rather than re-authoring the schemas.
