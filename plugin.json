@@ -1,0 +1,31 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "excalidraw-gpt-plugin",
+  "version": "0.1.0",
+  "description": "Create, inspect, edit, and refine diagrams on a live local Excalidraw canvas through MCP.",
+  "author": {
+    "name": "onsra520",
+    "url": "https://github.com/onsra520"
+  },
+  "homepage": "https://github.com/onsra520/excalidraw-gpt-plugin",
+  "repository": "https://github.com/onsra520/excalidraw-gpt-plugin",
+  "license": "MIT",
+  "keywords": ["excalidraw", "mcp", "diagram", "canvas", "chatgpt"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Excalidraw GPT",
+        "shortDescription": "Create and edit a live Excalidraw canvas",
+        "longDescription": "Create, inspect, edit, and refine diagrams on a live local Excalidraw canvas through MCP.",
+        "developerName": "onsra520",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://github.com/onsra520/excalidraw-gpt-plugin",
+        "defaultPrompt": [
+          "Create a clear architecture diagram on my Excalidraw canvas.",
+          "Inspect my current Excalidraw canvas and improve the diagram."
+        ]
+      }
+    }
+  }
+}
